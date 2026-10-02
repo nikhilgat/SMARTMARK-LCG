@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Model weights (ultralytics re-downloads these on first use)
+*.pt
+
+# Raw capture data
+captures/*
+!captures/calibration/
+captures/calibration/overlays/
+!captures/galvo/
+captures/galvo/*
+!captures/galvo/galvo_calib.json
+
+# Logs
+*.log

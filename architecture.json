@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "L2 + D435i + Galvo: Point-Cloud Capture Pipeline",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1200,
+      540
+    ]
+  },
+  "components": [
+    {
+      "id": "l2",
+      "type": "external",
+      "label": "Unitree L2",
+      "sublabel": "4D LiDAR · 192.168.1.62",
+      "pos": [
+        40,
+        70
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "relay",
+      "type": "backend",
+      "label": "udp_relay.py",
+      "sublabel": "Windows :6201 → WSL",
+      "pos": [
+        280,
+        70
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "bridge",
+      "type": "backend",
+      "label": "lidar_bridge",
+      "sublabel": "Unitree SDK · TCP :9899",
+      "pos": [
+        520,
+        70
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "calibrate",
+      "type": "backend",
+      "label": "calibrate.py",
+      "sublabel": "calib_target + plane solve",
+      "pos": [
+        760,
+        70
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "calibjson",
+      "type": "database",
+      "label": "captures/calibration",
+      "sublabel": "K · T_cam_lidar · range",
+      "pos": [
+        1000,
+        70
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "d435i",
+      "type": "external",
+      "label": "RealSense D435i",
+      "sublabel": "RGB + depth · USB3",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "capture",
+      "type": "frontend",
+      "label": "capture_gui.py",
+      "sublabel": "live view · CAPTURE 1–2 s",
+      "pos": [
+        520,
+        250
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "one button"
+    },
+    {
+      "id": "captures",
+      "type": "database",
+      "label": "captures/<time>_<tag>",
+      "sublabel": "image · lidar.npz · meta",
+      "pos": [
+        760,
+        250
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "galvocal",
+      "type": "backend",
+      "label": "galvo_calib.py",
+      "sublabel": "dot sweep on board",
+      "pos": [
+        280,
+        430
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "laser",
+      "type": "external",
+      "label": "Galvo laser",
+      "sublabel": "green · COM5",
+      "pos": [
+        520,
+        430
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "track",
+      "type": "frontend",
+      "label": "laser_track.py",
+      "sublabel": "YOLO11 / YOLO-World",
+      "pos": [
+        760,
+        430
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "fusion",
+      "type": "frontend",
+      "label": "fusion_gui.py",
+      "sublabel": "LiDAR on RGB, live",
+      "pos": [
+        1000,
+        430
+      ],
+      "size": [
+        160,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "WSL Ubuntu",
+      "wraps": [
+        "bridge"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "l2-udp",
+      "from": "l2",
+      "to": "relay",
+      "label": "UDP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "relay-bridge",
+      "from": "relay",
+      "to": "bridge",
+      "label": "forward"
+    },
+    {
+      "id": "bridge-capture",
+      "from": "bridge",
+      "to": "capture",
+      "label": "PCLD frames",
+      "labelAt": [
+        600,
+        192
+      ]
+    },
+    {
+      "id": "cam-capture",
+      "from": "d435i",
+      "to": "capture",
+      "label": "USB3",
+      "variant": "emphasis"
+    },
+    {
+      "id": "save",
+      "from": "capture",
+      "to": "captures",
+      "label": "save"
+    },
+    {
+      "id": "pairs",
+      "from": "captures",
+      "to": "calibrate",
+      "label": "pairs"
+    },
+    {
+      "id": "solve",
+      "from": "calibrate",
+      "to": "calibjson",
+      "label": "solve"
+    },
+    {
+      "id": "use-extr",
+      "from": "calibjson",
+      "to": "fusion",
+      "label": "extrinsics",
+      "labelAt": [
+        1080,
+        282
+      ]
+    },
+    {
+      "id": "dots",
+      "from": "galvocal",
+      "to": "laser",
+      "label": "dots"
+    },
+    {
+      "id": "shapes",
+      "from": "track",
+      "to": "laser",
+      "label": "box / circle"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Capture a dataset",
+      "items": [
+        "bridge\\start_lidar.ps1, then capture_gui.py",
+        "Rig still; board 1.3–2.5 m, tilted ±30–45°",
+        "15–20 poses, one CAPTURE each"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Calibrate",
+      "items": [
+        "calibrate.py: intrinsics, range model, T_cam_lidar",
+        "Tilt spread > 0.15 or it refuses",
+        "board_size.py checks board scale"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Use",
+      "items": [
+        "fusion_gui.py: LiDAR on RGB",
+        "galvo_calib.py capture → fit → aim",
+        "laser_track.py draws around objects"
+      ]
+    }
+  ]
+}
