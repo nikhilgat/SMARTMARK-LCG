@@ -35,7 +35,7 @@ from calibrate import board_obj, detect  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "captures" / "galvo"
 CAM_CALIB = ROOT / "captures" / "calibration" / "intrinsics_calibrated.json"
-S = 1024 / 65536          # mirror units -> "pixels" for OpenCV (keeps the numbers well conditioned)
+S = 1.0                   # mirror units -> galvo "pixels": 1 = K is in mirror units (1024 / 65536 fits the same)
 BOARD, SQ = (7, 5), 0.095  # inner corners, square size (m) of the A1 board
 # the printed pattern spans -1..7 x -1..5 squares in the inner-corner frame; the sheet adds 40 / 12 mm
 BOARD_X = (-SQ - 0.03, 7 * SQ + 0.03)
@@ -213,7 +213,7 @@ def fit(views, refit=True):
         pb[:, 2] = 0
         obj_b.append(pb.astype(np.float32)); img_b.append(D.astype(np.float32).reshape(-1, 1, 2))
         P_all.append(P); D_all.append(D)
-    size = (1024, 1024)
+    size = (round(65536 * S),) * 2  # same units as D: OpenCV's start guess (centre = size / 2) must sit among the dots
     _, K, dist, _, _ = cv2.calibrateCamera(obj_b, img_b, size, None, None)
     P, D = np.vstack(P_all), np.vstack(D_all)
 
@@ -259,7 +259,9 @@ def save_calib(c, path):
 def load_calib(path=OUT / "galvo_calib.json"):
     """Read galvo_calib.json back into the arrays to_dac() and covered() need."""
     e =json.loads(Path(path).read_text())
-    return {k: np.array(e[k]) for k in ("K", "dist", "rvec", "tvec", "coverage")}
+    c = {k: np.array(e[k]) for k in ("K", "dist", "rvec", "tvec", "coverage")}
+    c["K"][:2] *= S / e.get("scale_dac_to_px", S)  # files saved with another S (e.g. 1024 / 65536) still aim right
+    return c
 
 
 def covered(P, c, margin=0.02):
@@ -402,7 +404,8 @@ def selftest():
     """No-hardware check: simulate a galvo with known parameters, check fit() recovers it well enough to hit
     new points within a few mm, and check find_dot/ray_plane/on_board on synthetic data."""
     rng = np.random.default_rng(3)
-    K_true = np.array([[1400.0, 0, 520], [0, 1380, 500], [0, 0, 1]]); d_true = np.array([0.08, -0.05, 0.001, -0.002, 0])
+    K_true = np.array([[1400.0, 0, 520], [0, 1380, 500], [0, 0, 1]]); K_true[:2] *= 64 * S  # 1024-px galvo -> units of S
+    d_true = np.array([0.08, -0.05, 0.001, -0.002, 0])
     r_true, t_true = np.radians([2.0, -3.0, 1.0]), np.array([0.09, -0.04, 0.02])  # camera -> galvo
     truth = dict(K=K_true, dist=d_true, rvec=r_true, tvec=t_true)
     views = []

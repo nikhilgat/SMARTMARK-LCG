@@ -87,6 +87,24 @@ python calib/laser_track.py --dry-run   # everything except the laser
 
 Type class names (for example `chair`, `bottle` or `door`). The 80 COCO classes run on YOLO11; any other name switches to open-vocabulary YOLO-World. The laser draws one box or circle around one object at a time. It won't fire at targets outside the calibrated area unless you tick the option that allows it.
 
+## Scan ↔ BIM alignment (ICP)
+
+```powershell
+python icp\webui.py                      # dashboard at http://127.0.0.1:5000, or use the CLIs:
+python icp\generate.py --rooms 203       # IFC room -> icp\data\bim\203.ply
+python icp\align.py --pair 203           # icp\data\scans\203.ply -> transform + report in icp\results\
+```
+
+Settings for both live in `icp\config.yaml`. Each script's header explains the method and how to read the results.
+
+## Panorama layout (LOCALIZATION-360)
+
+```powershell
+python localization360\app.py            # http://127.0.0.1:5001: HorizonNet / LGT-Net on an equirectangular panorama
+```
+
+The two model repos (with their weights and small compatibility patches) live under `localization360\` and need `pip install pylsd-nova yacs einops imageio` on top of torch.
+
 ## Self-tests
 
 These run without any hardware:
@@ -108,7 +126,9 @@ python laser_track.py --selftest
 | `calib/` | Capture, calibration, fusion viewer, galvo calibration and laser tracking scripts; each file's header says what it's for and what it works with |
 | `captures/calibration/` | LiDAR–camera calibration results (`extrinsics.json`, `intrinsics_calibrated.json`) |
 | `captures/galvo/` | Galvo calibration result (`galvo_calib.json`) |
-| `Dockerfile_Driver (1)/` | An alternative ROS 2 Foxy Docker setup for the L2 driver with RViz |
+| `docker/` | An alternative ROS 2 Foxy Docker setup for the L2 driver with RViz |
+| `icp/` | Scan ↔ BIM registration: `generate.py`, `align.py`, `webui.py`, `config.yaml`; IFC, clouds and runs in `data/` and `results/` |
+| `localization360/` | Panorama layout web UI (`app.py`) over vendored HorizonNet and LGT-Net |
 | `ROADMAP.md` | Calibration method and validation checklist |
 | `architecture.html` | Architecture diagram |
 

@@ -1,0 +1,59 @@
+# Settings for icp/generate.py (stage 1) and icp/align.py (stage 2). Relative paths resolve from icp/.
+
+generate:
+  ifc: data/ifc/H_DA_D21_Final.ifc
+  out_dir: data/bim            # align.py reads its reference clouds from here
+  rooms: ["203"]               # IfcSpace.Name (number) or LongName; override with --rooms / --all
+  name_by: number              # number -> 203.ply (pairs with data/scans/203.ply) | number_name | name
+  prefix: ""                   # prepended to the stem; breaks pairing if set
+  ascii_ply: true              # false -> binary, ~4x smaller
+  spacing_xy: 0.05             # m, horizontal lattice pitch
+  spacing_z: 0.05              # m, vertical pitch on walls
+  walls: true                  # inner wall faces: what the LiDAR sees
+  floor: true
+  ceiling: false               # left open on purpose
+  doors: true                  # carve door openings (else wall is solid where a scan sees through)
+  windows: false               # LiDAR usually doesn't see through glazing
+  opening_margin: 0.06         # m, padding around each opening
+  ceiling_mode: auto           # auto (lowest covering/slab, else space top) | space_top | fixed
+  clear_height: 2.60           # m, only for fixed
+
+align:
+  scans_dir: data/scans        # site scans, named <room>.ply
+  bim_dir: data/bim
+  out_dir: results
+  pair: "203"                  # default stem; --pair / --all-pairs override
+
+  preprocess:
+    voxel: 0.03                # m
+    normal_radius: 0.20        # m
+    level_source: true         # scan floor is tilted a few degrees
+    level_target: false        # BIM is already gravity-aligned
+    outlier_removal:           # null disables. Stray multipath returns (<5 % of points) wreck the
+      nb_neighbors: 20         # convex-hull footprint check: one point 2 m past a wall moves the
+      std_ratio: 1.5           # fitted edge 2 m. Check this before reaching for crop_xy.
+    crop_xy: null              # [xmin, ymin, xmax, ymax] in the levelled scan, only for a genuinely dense
+                               # second structure; read it off `align.py --pair X --inspect`. Too tight a box
+                               # can clip a real wall and hand the yaw search a wrong 180 deg optimum.
+    wall_slice: [0.60, 1.90]   # m above each cloud's min z; floor (37 % of BIM points) would starve the yaw
+
+  per_room: {}                 # e.g. {"207": {preprocess: {crop_xy: [..]}}}, merged onto preprocess
+
+  coarse:
+    method: yaw                # fpfh | pca | yaw | manual | all
+    yaw_step_deg: 2.0
+    yaw_thr: 0.30              # m
+    fpfh_seed: 0               # reproducible RANSAC
+    manual_pairs: null         # {source: [[x,y,z],...], target: [[x,y,z],...]}, or --pick
+
+  refine:
+    ladder: [0.30, 0.15, 0.08, 0.05]   # m; don't go below the real geometric discrepancy
+    max_iterations: 200
+    point_to_plane: false      # rank deficient on a wall-only slice (NaN); true only without wall_slice
+
+  evaluate:
+    score_threshold: 0.05      # m, inlier distance in the report
+
+  viewer:
+    save_png: true
+    show_window: false

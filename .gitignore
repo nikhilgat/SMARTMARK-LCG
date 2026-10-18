@@ -15,3 +15,12 @@ captures/galvo/*
 
 # Logs
 *.log
+
+# ICP data and runs (IFC, scans, BIM clouds, results)
+icp/data/
+icp/results/
+
+# Vendored model repos (with ~870 MB weights) and their run outputs
+localization360/HorizonNet/
+localization360/LGT-Net/
+localization360/runs/
