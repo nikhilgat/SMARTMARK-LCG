@@ -71,8 +71,8 @@ def run(rig, calib, a):
     """Open the fusion window (left: camera + LiDAR overlay and controls, right: 3D coloured cloud),
     start the sensor threads and redraw ~15 times a second until the window is closed."""
     import open3d as o3d
-    import open3d.visualization.gui as gui
-    import open3d.visualization.rendering as rendering
+    import open3d.visualization.gui as gui # type: ignore
+    import open3d.visualization.rendering as rendering # type: ignore
 
     app = gui.Application.instance
     app.initialize()
@@ -192,6 +192,6 @@ if __name__ == "__main__":
     if a.selftest:
         selftest()
     else:
-        import open3d.visualization.gui  # noqa: F401  main-thread imports first: concurrent pybind11 imports deadlock
+        import open3d.visualization.gui  # type: ignore # noqa: F401  main-thread imports first: concurrent pybind11 imports deadlock
         import pyrealsense2  # noqa: F401
         run(cg.Rig(Path(a.calib).parent, a.host, a.port, a.decay), load_calib(a.calib), a)
