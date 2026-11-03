@@ -197,8 +197,8 @@ def run_gui(rig, a, start_sensors):
     capture length slider, tag box and the CAPTURE button; right = live 3D LiDAR cloud coloured by intensity.
     start_sensors() is called once the window exists; the view refreshes ~12 times a second."""
     import open3d as o3d
-    import open3d.visualization.gui as gui
-    import open3d.visualization.rendering as rendering
+    import open3d.visualization.gui as gui # type: ignore
+    import open3d.visualization.rendering as rendering # type: ignore
 
     app = gui.Application.instance
     app.initialize()
@@ -368,7 +368,7 @@ if __name__ == "__main__":
         selftest()
     else:
         # import both pybind11 extensions on the main thread first: importing them concurrently deadlocks
-        import open3d.visualization.gui  # noqa: F401
+        import open3d.visualization.gui  # type: ignore # noqa: F401
         import pyrealsense2  # noqa: F401
         rig = Rig(a.out, a.host, a.port, a.decay)
 

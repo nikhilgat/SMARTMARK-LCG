@@ -255,8 +255,8 @@ class SiteRig(cg.Rig):
 def run_gui(rig, seconds, start_sensors):
     """Left: RealSense colour + depth, 360 preview, status, seconds slider, name, CAPTURE. Right: live LiDAR cloud."""
     import open3d as o3d
-    import open3d.visualization.gui as gui
-    import open3d.visualization.rendering as rendering
+    import open3d.visualization.gui as gui # type: ignore
+    import open3d.visualization.rendering as rendering # type: ignore
 
     app = gui.Application.instance
     app.initialize()
@@ -378,7 +378,7 @@ if __name__ == "__main__":
     ap.add_argument("--width", type=int, default=1280); ap.add_argument("--height", type=int, default=720)
     a = ap.parse_args()
     # import both pybind11 extensions on the main thread first: importing them concurrently deadlocks
-    import open3d.visualization.gui  # noqa: F401
+    import open3d.visualization.gui  # type: ignore # noqa: F401
     import pyrealsense2  # noqa: F401
     rig = SiteRig(a.out)
 
