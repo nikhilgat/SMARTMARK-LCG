@@ -32,7 +32,7 @@ def fit_plane(pts):
     """Best-fit plane through a set of 3D points, as n·p = d with |n|=1 and d>0
     (normal points away from the sensor at the origin; d = distance from the sensor to the plane)."""
     c = pts.mean(0)
-    n = np.linalg.svd(pts - c)[2][2]
+    n = np.linalg.svd(pts - c, full_matrices=False)[2][2]  # full U would be N x N: hangs on a wall's ~50k points
     d = n @ c
     return (-n, -d) if d < 0 else (n, d)
 
